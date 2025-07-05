@@ -1,0 +1,52 @@
+from image import Image
+from model import Model
+from color import WHITE
+
+
+def line(image, x0, y0, x1, y1, color):
+    steep = False
+    # reflect steep lines over y=x
+    if abs(y1 - y0) > abs(x1 - x0):
+        x0, y0 = y0, x0
+        x1, y1 = y1, x1
+        steep = True
+
+    # line drawn left to right should look same as one drawn right to left
+    if x0 > x1:
+        x0, x1 = x1, x0
+        y0, y1 = y1, y0
+
+    for x in range(x0, x1):
+        t = (x - x0) / (x1 - x0)
+        y = round(y0 + t * (y1 - y0))
+
+        if steep:
+            image.set(y, x, color)  # unreflect
+        else:
+            image.set(x, y, color)
+
+
+def main():
+    image = Image(1000, 1000)
+    model = Model("head.obj")
+    for tri in range(model.ntriangles):
+        for i in range(3):
+            va = model.triangle(tri)[i]
+            vb = model.triangle(tri)[(i + 1) % 3]
+
+            # convert vertex coordinates to image coordinates
+            x0 = round((va.x + 1) * (image.width - 1) / 2)
+            y0 = round((va.y + 1) * (image.height - 1) / 2)
+            x1 = round((vb.x + 1) * (image.width - 1) / 2)
+            y1 = round((vb.y + 1) * (image.height - 1) / 2)
+
+            # connect the dots
+            line(image, x0, y0, x1, y1, WHITE)
+
+    with open("out.tga", "wb") as f:
+        f.write(image.to_bytes())
+    print("image rendered to out.tga")
+
+
+if __name__ == "__main__":
+    main()
