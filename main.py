@@ -4,26 +4,48 @@ from color import WHITE
 
 
 def line(image, x0, y0, x1, y1, color):
-    steep = False
-    # reflect steep lines over y=x
-    if abs(y1 - y0) > abs(x1 - x0):
-        x0, y0 = y0, x0
-        x1, y1 = y1, x1
-        steep = True
+    """
+    https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+    """
 
-    # line drawn left to right should look same as one drawn right to left
-    if x0 > x1:
-        x0, x1 = x1, x0
-        y0, y1 = y1, y0
-
-    for x in range(x0, x1):
-        t = (x - x0) / (x1 - x0)
-        y = round(y0 + t * (y1 - y0))
-
-        if steep:
-            image.set(y, x, color)  # unreflect
-        else:
+    def horizontal(x0, y0, x1, y1):
+        dx = x1 - x0
+        dy = y1 - y0
+        dir = -1 if dy < 0 else 1
+        dy *= dir
+        p = 2 * dy - dx
+        y = y0
+        for x in range(x0, x1 + 1):
             image.set(x, y, color)
+            if p >= 0:
+                y += dir
+                p -= 2 * dx
+            p += 2 * dy
+
+    def vertical(x0, y0, x1, y1):
+        dx = x1 - x0
+        dy = y1 - y0
+        dir = -1 if dx < 0 else 1
+        dx *= dir
+        p = 2 * dx - dy
+        x = x0
+        for y in range(y0, y1 + 1):
+            image.set(x, y, color)
+            if p >= 0:
+                x += dir
+                p -= 2 * dy
+            p += 2 * dx
+
+    if abs(y1 - y0) < abs(x1 - x0):
+        if x0 < x1:
+            horizontal(x0, y0, x1, y1)
+        else:
+            horizontal(x1, y1, x0, y0)
+    else:
+        if y0 < y1:
+            vertical(x0, y0, x1, y1)
+        else:
+            vertical(x1, y1, x0, y0)
 
 
 def main():
