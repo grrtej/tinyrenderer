@@ -22,7 +22,9 @@ class Color:
         return bytes((b, g, r, a))
 
 
-WHITE = Color.from_hex(0xFFFFFF)
-RED = Color.from_hex(0xFF0000)
-GREEN = Color.from_hex(0x00FF00)
-BLUE = Color.from_hex(0x0000FF)
+COLORS = {
+    "white": Color.from_hex(0xFFFFFF),
+    "red": Color.from_hex(0xFF0000),
+    "green": Color.from_hex(0x00FF00),
+    "blue": Color.from_hex(0x0000FF),
+}

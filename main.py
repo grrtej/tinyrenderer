@@ -1,6 +1,6 @@
 from image import Image
 from model import Model, Vector3
-from color import WHITE
+from color import COLORS
 
 
 def line(image, x0, y0, x1, y1, color):
@@ -73,7 +73,7 @@ def main():
     model = Model("head.obj")
     for i in range(model.ntriangles):
         a, b, c = to_screen_space(model.triangle(i), image.width, image.height)
-        triangle(image, a, b, c, WHITE)
+        triangle(image, a, b, c, COLORS["white"])
 
     with open("out.tga", "wb") as f:
         f.write(image.to_bytes())
