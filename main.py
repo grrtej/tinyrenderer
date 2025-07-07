@@ -1,5 +1,5 @@
 from image import Image
-from model import Model
+from model import Model, Vector3
 from color import WHITE
 
 
@@ -48,22 +48,32 @@ def line(image, x0, y0, x1, y1, color):
             vertical(x1, y1, x0, y0)
 
 
+def triangle(image, a, b, c, color):
+    line(image, a.x, a.y, b.x, b.y, color)
+    line(image, b.x, b.y, c.x, c.y, color)
+    line(image, c.x, c.y, a.x, a.y, color)
+
+
+def to_screen_space(vectors, screen_width, screen_height):
+    def convert(v):
+        return Vector3(
+            x=round((v.x + 1) * (screen_width - 1) / 2),
+            y=round((v.y + 1) * (screen_height - 1) / 2),
+            z=v.z,
+        )
+
+    if isinstance(vectors, Vector3):
+        return convert(vectors)
+
+    return type(vectors)(convert(v) for v in vectors)
+
+
 def main():
     image = Image(1000, 1000)
     model = Model("head.obj")
-    for tri in range(model.ntriangles):
-        for i in range(3):
-            va = model.triangle(tri)[i]
-            vb = model.triangle(tri)[(i + 1) % 3]
-
-            # convert vertex coordinates to image coordinates
-            x0 = round((va.x + 1) * (image.width - 1) / 2)
-            y0 = round((va.y + 1) * (image.height - 1) / 2)
-            x1 = round((vb.x + 1) * (image.width - 1) / 2)
-            y1 = round((vb.y + 1) * (image.height - 1) / 2)
-
-            # connect the dots
-            line(image, x0, y0, x1, y1, WHITE)
+    for i in range(model.ntriangles):
+        a, b, c = to_screen_space(model.triangle(i), image.width, image.height)
+        triangle(image, a, b, c, WHITE)
 
     with open("out.tga", "wb") as f:
         f.write(image.to_bytes())
