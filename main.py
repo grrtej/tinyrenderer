@@ -6,6 +6,32 @@ from color import COLORS
 def line(image, x0, y0, x1, y1, color):
     """
     https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+    https://ics.uci.edu/~gopi/CS112/web/handouts/OldFiles/Bresenham.pdf
+
+    Bresenham's algorithm is a line drawing technique based on the implicit
+    equation of a line. Its main advantage is that it only uses integer math.
+
+    Implicit equation of a line:
+    F(x, y) = ∆y*x - ∆x*y + ∆x*y0 - ∆y*x0
+
+    If F(x, y) = 0, (x, y) is on the line defined by (x0, y0), (x1, y1).
+    If < 0, it is on one side of the line.
+    If > 0, it is on the other side of the line.
+
+    For horizontal lines and +y axis up:
+    x++ always
+    y++ when F(x + 1, y + 0.5) >= 0
+        Explanation:
+            If line at x + 1 passes over the midpoint of y and y + 1 (y + 0.5),
+            then move y up. In other words, midpoint is below line which is
+            what the equation is checking.
+
+    For vertical lines (slope > 1), decisions are made for x++ (whether to go
+    right or stay).
+
+    Bresenham's algorithm accumulates F (or "error") instead of calculating it
+    from scratch for each x, y. Refer to the articles linked above to see how
+    it does this.
     """
 
     def horizontal(x0, y0, x1, y1):
@@ -13,28 +39,28 @@ def line(image, x0, y0, x1, y1, color):
         dy = y1 - y0
         dir = -1 if dy < 0 else 1
         dy *= dir
-        p = 2 * dy - dx
+        e = 2 * dy - dx
         y = y0
         for x in range(x0, x1 + 1):
             image.set(x, y, color)
-            if p >= 0:
+            if e >= 0:
                 y += dir
-                p -= 2 * dx
-            p += 2 * dy
+                e -= 2 * dx
+            e += 2 * dy
 
     def vertical(x0, y0, x1, y1):
         dx = x1 - x0
         dy = y1 - y0
         dir = -1 if dx < 0 else 1
         dx *= dir
-        p = 2 * dx - dy
+        e = 2 * dx - dy
         x = x0
         for y in range(y0, y1 + 1):
             image.set(x, y, color)
-            if p >= 0:
+            if e >= 0:
                 x += dir
-                p -= 2 * dy
-            p += 2 * dx
+                e -= 2 * dy
+            e += 2 * dx
 
     if abs(y1 - y0) < abs(x1 - x0):
         if x0 < x1:
