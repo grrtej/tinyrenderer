@@ -1,6 +1,6 @@
 from image import Image
 from model import Model, Vector3
-from color import COLORS
+from color import Color
 
 
 def line(image, x0, y0, x1, y1, color):
@@ -75,9 +75,40 @@ def line(image, x0, y0, x1, y1, color):
 
 
 def triangle(image, a, b, c, color):
-    line(image, a.x, a.y, b.x, b.y, color)
-    line(image, b.x, b.y, c.x, c.y, color)
-    line(image, c.x, c.y, a.x, a.y, color)
+    """
+    draw a filled triangle using signed distances.
+    it leaves some holes here and there due to some rounding errors that
+    i dont know of yet.
+    """
+
+    def dist(x0, y0, x1, y1, x, y):
+        # signed "distance" of point from line
+        dy = y1 - y0
+        dx = x1 - x0
+        return round(dy * x - dx * y + dx * y0 - dy * x0)
+
+    # evaluate CA x CB determinant
+    # if det < 0 then triangle ABC is clockwise, swap AB to make it
+    # counter-clockwise.
+    det = (a.x - c.x) * (b.y - c.y) - (a.y - c.y) * (b.x - c.x)
+    if det < 0:
+        a, b = b, a
+
+    # calculate bounding box of triangle for the scanlines
+    top = max(a.y, b.y, c.y)
+    bottom = min(a.y, b.y, c.y)
+    left = min(a.x, b.x, c.x)
+    right = max(a.x, b.x, c.x)
+
+    for y in range(bottom, top + 1):
+        for x in range(left, right + 1):
+            # for CCW triangle, distance from each side < 0
+            check_ab = dist(a.x, a.y, b.x, b.y, x, y) < 0
+            check_bc = dist(b.x, b.y, c.x, c.y, x, y) < 0
+            check_ca = dist(c.x, c.y, a.x, a.y, x, y) < 0
+
+            if check_ab and check_bc and check_ca:
+                image.set(x, y, color)
 
 
 def to_screen_space(vectors, screen_width, screen_height):
@@ -98,8 +129,9 @@ def main():
     image = Image(1000, 1000)
     model = Model("head.obj")
     for i in range(model.ntriangles):
+        print(f"tri: {i}/{model.ntriangles}", end="\r")
         a, b, c = to_screen_space(model.triangle(i), image.width, image.height)
-        triangle(image, a, b, c, COLORS["white"])
+        triangle(image, a, b, c, Color.random_color())
 
     with open("out.tga", "wb") as f:
         f.write(image.to_bytes())

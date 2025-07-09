@@ -1,3 +1,6 @@
+from random import random
+
+
 class Color:
     def __init__(self, r=0.0, g=0.0, b=0.0, a=0.0):
         self.r = r
@@ -12,6 +15,10 @@ class Color:
         b = (hex & 0xFF) / 255
         a = alpha / 255
         return cls(r, g, b, a)
+
+    @classmethod
+    def random_color(cls, alpha=1.0):
+        return cls(random(), random(), random(), alpha)
 
     @property
     def bgra(self):
