@@ -76,39 +76,52 @@ def line(image, x0, y0, x1, y1, color):
 
 def triangle(image, a, b, c, color):
     """
-    draw a filled triangle using signed distances.
-    it leaves some holes here and there due to some rounding errors that
-    i dont know of yet.
+    for each y, connect left and right sides of triangle using a line.
+    handling flat top and flat bottom triangles separately makes this easier.
     """
 
-    def dist(x0, y0, x1, y1, x, y):
-        # signed "distance" of point from line
-        dy = y1 - y0
-        dx = x1 - x0
-        return round(dy * x - dx * y + dx * y0 - dy * x0)
-
-    # evaluate CA x CB determinant
-    # if det < 0 then triangle ABC is clockwise, swap AB to make it
-    # counter-clockwise.
-    det = (a.x - c.x) * (b.y - c.y) - (a.y - c.y) * (b.x - c.x)
-    if det < 0:
-        a, b = b, a
-
-    # calculate bounding box of triangle for the scanlines
-    top = max(a.y, b.y, c.y)
-    bottom = min(a.y, b.y, c.y)
-    left = min(a.x, b.x, c.x)
-    right = max(a.x, b.x, c.x)
-
-    for y in range(bottom, top + 1):
-        for x in range(left, right + 1):
-            # for CCW triangle, distance from each side < 0
-            check_ab = dist(a.x, a.y, b.x, b.y, x, y) < 0
-            check_bc = dist(b.x, b.y, c.x, c.y, x, y) < 0
-            check_ca = dist(c.x, c.y, a.x, a.y, x, y) < 0
-
-            if check_ab and check_bc and check_ca:
+    def top(a, b, c):
+        b, c = sorted((b, c), key=lambda v: v.x)
+        xl = a.x
+        xr = a.x
+        xl_delta = (b.x - a.x) / (b.y - a.y)
+        xr_delta = (c.x - a.x) / (c.y - a.y)
+        for y in range(a.y, b.y + 1):
+            for x in range(round(xl), round(xr) + 1):
                 image.set(x, y, color)
+            xl += xl_delta
+            xr += xr_delta
+
+    def bottom(a, b, c):
+        a, b = sorted((a, b), key=lambda v: v.x)
+        xl = c.x
+        xr = c.x
+        xl_delta = (c.x - a.x) / (c.y - a.y)
+        xr_delta = (c.x - b.x) / (c.y - b.y)
+        for y in range(c.y, a.y - 1, -1):
+            for x in range(round(xl), round(xr) + 1):
+                image.set(x, y, color)
+            xl -= xl_delta
+            xr -= xr_delta
+
+    a, b, c = sorted((a, b, c), key=lambda v: v.y)
+    if c.y - a.y == 0:
+        return  # collinear points, not a triangle
+
+    if a.y == b.y:
+        bottom(a, b, c)
+    elif b.y == c.y:
+        top(a, b, c)
+    else:
+        # interpolate point D on longest side AC, to split triangle
+        # into flat top and flat bottom triangles
+        dx = c.x - a.x
+        dy = c.y - a.y
+        alpha = (b.y - a.y) / dy
+        new_x = a.x + alpha * dx
+        d = Vector3(new_x, b.y)
+        top(a, b, d)
+        bottom(b, d, c)
 
 
 def to_screen_space(vectors, screen_width, screen_height):
