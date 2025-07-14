@@ -1,3 +1,6 @@
+from random import random
+
+
 class Color:
     def __init__(self, r=0.0, g=0.0, b=0.0, a=0.0):
         self.r = r
@@ -13,6 +16,10 @@ class Color:
         a = alpha / 255
         return cls(r, g, b, a)
 
+    @classmethod
+    def random_color(cls, alpha=1.0):
+        return cls(random(), random(), random(), alpha)
+
     @property
     def bgra(self):
         r = int(self.r * 255)
@@ -22,7 +29,9 @@ class Color:
         return bytes((b, g, r, a))
 
 
-WHITE = Color.from_hex(0xFFFFFF)
-RED = Color.from_hex(0xFF0000)
-GREEN = Color.from_hex(0x00FF00)
-BLUE = Color.from_hex(0x0000FF)
+COLORS = {
+    "white": Color.from_hex(0xFFFFFF),
+    "red": Color.from_hex(0xFF0000),
+    "green": Color.from_hex(0x00FF00),
+    "blue": Color.from_hex(0x0000FF),
+}
